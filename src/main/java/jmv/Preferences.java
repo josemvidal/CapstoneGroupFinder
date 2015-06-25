@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * The set of everyone's preferences for which group they want to be in.
  */
-public class Preferences {
+public class Preferences implements Runnable{
 
     /**
      * Number of preferences each person submits
@@ -20,10 +20,13 @@ public class Preferences {
     public static final int NUM_PREFERENCES = 5;
 
     public static void main(String[] args){
-        System.out.println("Hello World");
-        Preferences p = new Preferences();
-        p.readFromFile();
-        p.hillClimbingSearch();
+        System.out.println("Starting threads");
+        for (int i = 0; i < 4; i++) {
+            Preferences p = new Preferences();
+            p.readFromFile();
+            Thread t = new Thread(p);
+            t.start();
+        }
     }
 
     /**
@@ -51,10 +54,10 @@ public class Preferences {
             int numStudents = myEntries.size();
             preferences = new int[numStudents][NUM_PREFERENCES];
             emails = new String[numStudents];
-            Iterator<String []> iterator = myEntries.iterator();
+            Iterator iterator = myEntries.iterator();
             int i = 0;
             while (iterator.hasNext()){
-                String [] row = iterator.next();
+                String [] row = (String[]) iterator.next();
                 emails[i] = row[10];
                 for (int j = 0; j < NUM_PREFERENCES; j++) {
                     preferences[i][j] = Integer.parseInt(row[11 + j]);
@@ -63,8 +66,6 @@ public class Preferences {
             }
             setNumGroups();
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -75,10 +76,6 @@ public class Preferences {
     }
 
     private int numGroups;
-
-    public int getNumGroups(){
-        return numGroups;
-    }
 
     /**
      * Sets the number of groups. Assumes they are positive consecutive integers.
@@ -95,8 +92,8 @@ public class Preferences {
     }
     /**
      * Return the index of value in array, or -1 if not there.
-     * @param array
-     * @param value
+     * @param array the array
+     * @param value the value
      */
     private int getIndex(int[] array, int value){
         for (int i = 0; i < array.length; i++) {
@@ -109,7 +106,7 @@ public class Preferences {
     /**
      * Calculate the value of a given our current preferences. 0 is perfect, bigger is worse.
      * @param a an Allocation
-     * @return
+     * @return the value
      */
     public int getValuePreferencesOf(Allocation a){
         int value = 0;
@@ -149,8 +146,8 @@ public class Preferences {
 
     /**
      * Calculate the value of this allocation. 0 is best. Lower is better.
-     * @param a
-     * @return
+     * @param a the allocation
+     * @return the value
      */
     public int getValue(Allocation a){
         int groupError = a.getMemberNumberError();
@@ -161,7 +158,7 @@ public class Preferences {
 
     /**
      * Find an allocation that is better than a by only changing one person's group.
-     * @param a
+     * @param a the allocation
      * @return a new allocation
      */
     public Allocation hillClimb(Allocation a){
@@ -185,12 +182,12 @@ public class Preferences {
             }
             a.set(personIndex,oldGroup); //set to old value
         }
-        return bestAllocations.get((int)Math.random()*bestAllocations.size());
+        return bestAllocations.get((int) (Math.random() * bestAllocations.size()));
     }
 
     /**
      * Starting at a, keep hillClimb-ing until we get stuck. Return
-     * @param a
+     * @param a the allocation
      * @return a new allocation, the allocation at which we got stuck on.
      */
     public Allocation continuousHillClimb(Allocation a){
@@ -208,14 +205,14 @@ public class Preferences {
 
     /**
      * Returns a modified version of a
-     * @param allocation
-     * @param numChanges
-     * @return
+     * @param allocation the start
+     * @param numChanges the max number of changes
+     * @return modified allocation
      */
     public Allocation mutateAllocation(Allocation allocation, int numChanges){
         for (int i = 0; i < numChanges * Math.random(); i++) {
             int index = (int)(Math.random()*allocation.NUM_STUDENTS); //of course, we could end up picking the same one multiple times
-            allocation.set(index, preferences[index][(int)Math.random()*NUM_PREFERENCES]);
+            allocation.set(index, preferences[index][((int) (Math.random() * NUM_PREFERENCES))]);
         }
         return allocation;
     }
@@ -225,8 +222,8 @@ public class Preferences {
      * Hillclimb until stuck, then try to get out of rut with some noise. If that works then repeat. If not, we give up.
      * It works much better than simple hill climbing.
      *
-     * @param a
-     * @return
+     * @param a seed
+     * @return new allocation.
      */
     public Allocation continuousHillClimbWithNoise(Allocation a){
         boolean foundBetterMutation;
@@ -251,7 +248,10 @@ public class Preferences {
         return bestAllocation;
     }
 
-
+    /**
+     * Perform a the search
+     * @return the best allocation found.
+     */
     public Allocation hillClimbingSearch(){
         Allocation bestAllocation = getRandomAllocation();
         int bestValue = getValue(bestAllocation);
@@ -271,5 +271,11 @@ public class Preferences {
             next = getRandomAllocation();
         }
         return bestAllocation;
+    }
+
+    @Override
+    public void run() {
+        System.out.println("Running");
+        hillClimbingSearch();
     }
 }
