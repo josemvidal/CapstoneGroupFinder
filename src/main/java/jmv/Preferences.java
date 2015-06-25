@@ -162,7 +162,7 @@ public class Preferences {
     /**
      * Find an allocation that is better than a by only changing one person's group.
      * @param a
-     * @return
+     * @return a new allocation
      */
     public Allocation hillClimb(Allocation a){
         int bestValue = getValue(a);
@@ -189,9 +189,9 @@ public class Preferences {
     }
 
     /**
-     * Starting at a, keep hillClimb-ing until we get stuck.
+     * Starting at a, keep hillClimb-ing until we get stuck. Return
      * @param a
-     * @return the allocation at which we got stuckn
+     * @return a new allocation, the allocation at which we got stuck on.
      */
     public Allocation continuousHillClimb(Allocation a){
         int currentValue = getValue(a);
@@ -206,19 +206,66 @@ public class Preferences {
         return a;
     }
 
+    /**
+     * Returns a modified version of a
+     * @param allocation
+     * @param numChanges
+     * @return
+     */
+    public Allocation mutateAllocation(Allocation allocation, int numChanges){
+        for (int i = 0; i < numChanges * Math.random(); i++) {
+            int index = (int)(Math.random()*allocation.NUM_STUDENTS); //of course, we could end up picking the same one multiple times
+            allocation.set(index, preferences[index][(int)Math.random()*NUM_PREFERENCES]);
+        }
+        return allocation;
+    }
+
+
+    /**
+     * Hillclimb until stuck, then try to get out of rut with some noise. If that works then repeat. If not, we give up.
+     * It works much better than simple hill climbing.
+     *
+     * @param a
+     * @return
+     */
+    public Allocation continuousHillClimbWithNoise(Allocation a){
+        boolean foundBetterMutation;
+        Allocation bestAllocation;
+        int bestValue;
+        Allocation next = continuousHillClimb(a);
+        bestAllocation = next;
+        bestValue = getValue(next);
+        do {
+            foundBetterMutation = false;
+            for (int i = 0; i < 100; i++) {
+                next = continuousHillClimb(mutateAllocation(bestAllocation.clone(), 10)); //5 works well
+                int nextValue = getValue(next);
+                if (nextValue < bestValue) {
+                    bestValue = nextValue;
+                    bestAllocation = next;
+                    foundBetterMutation = true;
+                    break;
+                }
+            }
+        } while (foundBetterMutation);
+        return bestAllocation;
+    }
+
+
     public Allocation hillClimbingSearch(){
         Allocation bestAllocation = getRandomAllocation();
         int bestValue = getValue(bestAllocation);
         System.out.println(bestValue);
         Allocation next = bestAllocation;
         int nextValue;
-        for (int i = 0; i < 100000; i++) {
-            next = continuousHillClimb(next);
+        for (int i = 0; i < 1000; i++) {
+//            next = continuousHillClimb(next);
+            next = continuousHillClimbWithNoise(next);
             nextValue = getValue(next);
             if  (nextValue < bestValue) {
                 bestValue = nextValue;
                 bestAllocation = next.clone();
-                System.out.println(bestValue);
+                System.out.println(bestValue - getNumStudents());
                 System.out.println(bestAllocation);
             }
             next = getRandomAllocation();
