@@ -22,6 +22,24 @@ public class Preferences implements Runnable{
     public static final int NUM_PREFERENCES = 5;
 
     public static void main(String[] args){
+
+        //Use genetic algorithm. It sucks.
+        Preferences p = new Preferences();
+        p.readFromFile();
+        Population population = new Population();
+        Allocation a = p.getPreferredAllocation();
+        population.add(a,p.getValue(a));
+        for (int i = 1; i < Population.MAX_SIZE; i++) {
+            a = p.getRandomAllocation();
+            population.add(a,p.getValue(a));
+        }
+        for (int i = 0; i < 100; i++) {
+            population.killUnfit();
+            population.repopulate(p);
+            System.out.println("min=" + population.getMinValue() + " max=" + population.getMaxValue());
+        }
+
+        /*
         System.out.println("Starting threads");
         for (int i = 0; i < 4; i++) {
             Preferences p = new Preferences();
@@ -29,6 +47,7 @@ public class Preferences implements Runnable{
             Thread t = new Thread(p);
             t.start();
         }
+        */
     }
 
     /**
@@ -36,7 +55,7 @@ public class Preferences implements Runnable{
      */
     private int[][] preferences = null;
     private String[] emails = null;
-    private static final Random random = new Random();
+    public static final Random random = new Random();
 
     /**
      * Inverted preferences.
@@ -230,7 +249,7 @@ public class Preferences implements Runnable{
     }
 
     /**
-     * Returns a modified version of a
+     * Returns a modified version of allocation. Modifies allocation in place.
      * @param allocation the start
      * @param numChanges the max number of changes
      * @return modified allocation

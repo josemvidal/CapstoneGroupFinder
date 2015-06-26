@@ -16,9 +16,11 @@ public class Allocation implements Cloneable{
     private int[] member;
 
     public final int NUM_STUDENTS;
+    public final int NUM_GROUPS;
 
     public Allocation(int numStudents, int numGroups){
         NUM_STUDENTS = numStudents;
+        NUM_GROUPS = numGroups;
         allocation = new int[numStudents];
         member = new int[numGroups];
         setGroupMembership();
@@ -26,6 +28,7 @@ public class Allocation implements Cloneable{
 
     public Allocation (int[] allocation, int numGroups){
         NUM_STUDENTS = allocation.length;
+        NUM_GROUPS = numGroups;
         this.allocation = allocation;
         member = new int[numGroups];
         setGroupMembership();
@@ -127,6 +130,23 @@ public class Allocation implements Cloneable{
     public int hashCode() {
         assert false : "hashCode not designed";
         return 42; // any arbitrary constant will do
+    }
+
+    /**
+     * Splice this with other to produce a new Allocation
+     * @param other the other parent
+     * @return the new Allocation
+     */
+    public Allocation reproduceWith(Allocation other){
+        int splicePoint = Preferences.random.nextInt(allocation.length);
+        Allocation baby = new Allocation(NUM_STUDENTS, NUM_GROUPS);
+        for (int i = 0; i < splicePoint; i++) {
+            baby.allocation[i] = allocation[i];
+        }
+        for (int i = splicePoint; i < NUM_STUDENTS; i++) {
+            baby.allocation[i] = other.allocation[i];
+        }
+        return baby;
     }
 
 }
