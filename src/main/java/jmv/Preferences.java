@@ -36,10 +36,42 @@ public class Preferences implements Runnable{
      */
     private int[][] preferences = null;
     private String[] emails = null;
-    private Random random;
+    private static final Random random = new Random();
+
+    /**
+     * Inverted preferences.
+     * preferencesIndex[i][groupNum] = the order in which student i places group Num,
+     *   Its value is 0,1,..NUM_PREFERENCES-1 or -1 if groupNum is not in i's preferences.
+     */
+    private int[][] preferencesIndex = null;
+
+    /**
+     * Create the preferencesIndex.
+     */
+    private void setPreferencesIndex (){
+        preferencesIndex = new int[getNumStudents()][numGroups];
+        for (int i = 0; i < preferences.length; i++) {
+            for (int j = 0; j < numGroups; j++) {
+                preferencesIndex[i][j] = -1;
+            }
+            int[] prefs = preferences[i];
+            for (int groupIndex = 0; groupIndex < NUM_PREFERENCES; groupIndex++) {
+                preferencesIndex[i][prefs[groupIndex]] = groupIndex;
+            }
+        }
+    }
+
+    /**
+     * Get the ordered preference of student for group
+     * @param student the student id
+     * @param group the group id
+     * @return the order, 0,1..NUM_PREFERENCES-1 or -1 if group is not present in student's preferences
+     */
+    public int getPreference(int student, int group){
+        return preferencesIndex[student][group];
+    }
 
     public Preferences() {
-        random = new Random();
     }
 
     public void set(int[][] preferences){
@@ -49,6 +81,7 @@ public class Preferences implements Runnable{
                 throw new RuntimeException("Wrong number of preferences " + p.length);
         }
         setNumGroups();
+        setPreferencesIndex();
     }
 
     public void readFromFile(){
@@ -69,6 +102,7 @@ public class Preferences implements Runnable{
                 i++;
             }
             setNumGroups();
+            setPreferencesIndex();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -94,18 +128,6 @@ public class Preferences implements Runnable{
         }
         numGroups = max + 1;
     }
-    /**
-     * Return the index of value in array, or -1 if not there.
-     * @param array the array
-     * @param value the value
-     */
-    private int getIndex(int[] array, int value){
-        for (int i = 0; i < array.length; i++) {
-            if (array[i] == value)
-                return i;
-        }
-        return -1;
-    }
 
     /**
      * Calculate the value of a given our current preferences. 0 is perfect, bigger is worse.
@@ -116,8 +138,8 @@ public class Preferences implements Runnable{
         int value = 0;
         for (int student = 0; student < a.NUM_STUDENTS; student++) {
             int studentAssignment = a.getGroup(student);
-            int pos = getIndex(preferences[student], studentAssignment);
-            value += (pos == -1) ? 6 : (1 + pos);
+            int pos = preferencesIndex[student][studentAssignment];
+            value += (pos == -1) ? (NUM_PREFERENCES + 1) : (1 + pos);
         }
         return value;
     }

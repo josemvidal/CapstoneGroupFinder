@@ -248,5 +248,23 @@ public class TestPreferences {
         assert(answer.equals(next));
     }
 
+    @Test
+    public void testPreferencesIndex(){
+        Preferences p = new Preferences();
+        int [][] prefs = new int[][] {
+                {1,2,3,4,5},
+                {1,2,3,4,5},
+                {1,2,3,4,5},
+                {1,2,3,4,5},
+                {5,4,3,2,1},
+                {5,4,3,2,1},
+                {5,4,3,2,1},
+                {5,4,3,2,1} };
+        p.set(prefs);
+        assertEquals(0, p.getPreference(0, 1)); //student 0, group 1
+        assertEquals(2, p.getPreference(1,3));
+        assertEquals(-1, p.getPreference(1,0));
+        assertEquals(4, p.getPreference(4,1));
+    }
 
 }

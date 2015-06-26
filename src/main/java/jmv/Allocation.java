@@ -98,8 +98,9 @@ public class Allocation implements Cloneable{
      * @param newGroup the new group
      */
     public void set(int person, int newGroup){
+        member[allocation[person]]--; //one fewer person in old group.
         allocation[person] = newGroup;
-        setGroupMembership();
+        member[newGroup]++; //one more in new group
     }
 
     public String toString(){
