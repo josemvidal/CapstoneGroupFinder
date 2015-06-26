@@ -3,7 +3,7 @@ package jmv;
 /**
  * An allocation of students to groups.
  */
-public class Allocation {
+public class Allocation implements Cloneable{
 
     /**
      * allocation[i] = group of student i.
@@ -70,7 +70,7 @@ public class Allocation {
      */
     public boolean isLegal(){
         for (int count : member){
-            if (count != 0 || count != 4 || count != 5) //each group must have 0 or 4 or 5.
+            if (! (count == 0 || count == 4 || count == 5)) //each group must have 0 or 4 or 5.
                 return false;
         }
         return true;
@@ -111,13 +111,21 @@ public class Allocation {
         return result.toString();
     }
 
-    public boolean equals(Allocation other){
-        if (allocation.length != other.allocation.length)
+    public boolean equals(Object other){
+        if (! (other instanceof Allocation)) return false;
+        Allocation o = (Allocation)other;
+        if (allocation.length != o.allocation.length)
             return false;
         for (int i = 0; i < allocation.length; i++) {
-            if (allocation[i] != other.allocation[i])
+            if (allocation[i] != o.allocation[i])
                 return false;
         }
         return true;
     }
+
+    public int hashCode() {
+        assert false : "hashCode not designed";
+        return 42; // any arbitrary constant will do
+    }
+
 }

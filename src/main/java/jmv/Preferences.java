@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 /**
  * The set of everyone's preferences for which group they want to be in.
  */
 public class Preferences implements Runnable{
+
 
     /**
      * Number of preferences each person submits
@@ -34,8 +36,10 @@ public class Preferences implements Runnable{
      */
     private int[][] preferences = null;
     private String[] emails = null;
+    private Random random;
 
     public Preferences() {
+        random = new Random();
     }
 
     public void set(int[][] preferences){
@@ -138,7 +142,7 @@ public class Preferences implements Runnable{
     public Allocation getRandomAllocation(){
         int[] allocation = new int[getNumStudents()];
         for (int i = 0; i < preferences.length; i++){
-            int c = (int)(Math.random()*NUM_PREFERENCES);
+            int c = (int)(random.nextInt(NUM_PREFERENCES));
             allocation[i] = preferences[i][c];
         }
         return new Allocation(allocation,numGroups);
@@ -182,7 +186,7 @@ public class Preferences implements Runnable{
             }
             a.set(personIndex,oldGroup); //set to old value
         }
-        return bestAllocations.get((int) (Math.random() * bestAllocations.size()));
+        return bestAllocations.get(random.nextInt(bestAllocations.size()));
     }
 
     /**
@@ -210,9 +214,9 @@ public class Preferences implements Runnable{
      * @return modified allocation
      */
     public Allocation mutateAllocation(Allocation allocation, int numChanges){
-        for (int i = 0; i < numChanges * Math.random(); i++) {
-            int index = (int)(Math.random()*allocation.NUM_STUDENTS); //of course, we could end up picking the same one multiple times
-            allocation.set(index, preferences[index][((int) (Math.random() * NUM_PREFERENCES))]);
+        for (int i = 0; i < random.nextInt(numChanges); i++) {
+            int index = random.nextInt(allocation.NUM_STUDENTS); //of course, we could end up picking the same one multiple times
+            allocation.set(index, preferences[index][random.nextInt(NUM_PREFERENCES)]);
         }
         return allocation;
     }
