@@ -2,7 +2,6 @@ package jmv;
 
 import au.com.bytecode.opencsv.CSVReader;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,9 +20,10 @@ public class Preferences implements Runnable{
      */
     public static final int NUM_PREFERENCES = 5;
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException {
 
         //Use genetic algorithm. It sucks.
+        /*
         Preferences p = new Preferences();
         p.readFromFile();
         Population population = new Population();
@@ -38,23 +38,23 @@ public class Preferences implements Runnable{
             population.repopulate(p);
             System.out.println("min=" + population.getMinValue() + " max=" + population.getMaxValue());
         }
+        */
 
-        /*
+        //Use hill-climbing with noise
         System.out.println("Starting threads");
         for (int i = 0; i < 4; i++) {
             Preferences p = new Preferences();
-            p.readFromFile();
             Thread t = new Thread(p);
             t.start();
         }
-        */
+
     }
 
     /**
      * preferences[i] = [1,5,3,2] means student 1 prefers group 1, then group 5, then 3, then 2.
      */
-    private int[][] preferences = null;
-    private String[] emails = null;
+    private final int[][] preferences;
+    private final String[] emails;
     public static final Random random = new Random();
 
     /**
@@ -62,15 +62,15 @@ public class Preferences implements Runnable{
      * preferencesIndex[i][groupNum] = the order in which student i places group Num,
      *   Its value is 0,1,..NUM_PREFERENCES-1 or -1 if groupNum is not in i's preferences.
      */
-    private int[][] preferencesIndex = null;
+    private final int[][] preferencesIndex;
 
     /**
      * Create the preferencesIndex.
      */
-    private void setPreferencesIndex (){
-        preferencesIndex = new int[getNumStudents()][numGroups];
+
+    private void setPreferencesIndex(){
         for (int i = 0; i < preferences.length; i++) {
-            for (int j = 0; j < numGroups; j++) {
+            for (int j = 0; j < NUM_GROUPS; j++) {
                 preferencesIndex[i][j] = -1;
             }
             int[] prefs = preferences[i];
@@ -90,54 +90,51 @@ public class Preferences implements Runnable{
         return preferencesIndex[student][group];
     }
 
-    public Preferences() {
-    }
-
-    public void set(int[][] preferences){
+    public Preferences(int[][] preferences){
         this.preferences = preferences;
         for (int[] p : preferences) {
             if (p.length != NUM_PREFERENCES)
                 throw new RuntimeException("Wrong number of preferences " + p.length);
         }
-        setNumGroups();
+        emails = new String[preferences.length];
+        NUM_GROUPS = calculateNumGroups();
+        preferencesIndex = new int[getNumStudents()][NUM_GROUPS];
         setPreferencesIndex();
+        setPrefTable();
     }
 
-    public void readFromFile(){
-        try {
-            CSVReader reader = new CSVReader(new FileReader("project_preferences.csv"));
-            List myEntries = reader.readAll();
-            int numStudents = myEntries.size();
-            preferences = new int[numStudents][NUM_PREFERENCES];
-            emails = new String[numStudents];
-            Iterator iterator = myEntries.iterator();
-            int i = 0;
-            while (iterator.hasNext()){
-                String [] row = (String[]) iterator.next();
-                emails[i] = row[10];
-                for (int j = 0; j < NUM_PREFERENCES; j++) {
-                    preferences[i][j] = Integer.parseInt(row[11 + j]);
-                }
-                i++;
+    public Preferences() throws IOException {
+        CSVReader reader = new CSVReader(new FileReader("project_preferences.csv"));
+        List myEntries = reader.readAll();
+        int numStudents = myEntries.size();
+        preferences = new int[numStudents][NUM_PREFERENCES];
+        emails = new String[numStudents];
+        Iterator iterator = myEntries.iterator();
+        int i = 0;
+        while (iterator.hasNext()){
+            String [] row = (String[]) iterator.next();
+            emails[i] = row[10];
+            for (int j = 0; j < NUM_PREFERENCES; j++) {
+                preferences[i][j] = Integer.parseInt(row[11 + j]);
             }
-            setNumGroups();
-            setPreferencesIndex();
-
-        } catch (IOException e) {
-            e.printStackTrace();
+            i++;
         }
+        NUM_GROUPS = calculateNumGroups();
+        preferencesIndex = new int[getNumStudents()][NUM_GROUPS];
+        setPreferencesIndex();
+        setPrefTable();
     }
 
     public int getNumStudents(){
         return preferences.length;
     }
 
-    private int numGroups;
+    private final int NUM_GROUPS;
 
     /**
      * Sets the number of groups. Assumes they are positive consecutive integers.
      */
-    private void setNumGroups(){
+    private int calculateNumGroups(){
         int max = 0;
         for (int[] p: preferences){ //just find the biggest number
             for (int g :p){
@@ -145,7 +142,7 @@ public class Preferences implements Runnable{
                     max = g;
             }
         }
-        numGroups = max + 1;
+        return max + 1;
     }
 
     /**
@@ -172,7 +169,43 @@ public class Preferences implements Runnable{
         for (int i = 0; i < preferences.length; i++){
             allocation[i] = preferences[i][0];
         }
-        return new Allocation(allocation,numGroups);
+        return new Allocation(allocation, NUM_GROUPS);
+    }
+
+    /**
+     * Lookup table Used by getRandomPreferneceIndex
+     */
+    private final int[] PREF_TABLE = new int[(NUM_PREFERENCES + 1)*NUM_PREFERENCES / 2] ; //1+2+3...NUM_PREFERNCES
+
+    /**
+     * Populate PREF_TABLE, used by getRandomPreferenceIndex()
+     */
+    private void setPrefTable(){
+        int j = NUM_PREFERENCES;
+        int value = 0;
+        for (int i = 0; i < PREF_TABLE.length; i++) {
+            if (i < j)
+                PREF_TABLE[i] = value;
+            else {
+                j += (NUM_PREFERENCES - value - 1);
+                value++;
+            }
+        }
+    }
+
+    /**
+     * Return a random number in 0..NUM_PREFERENCES-1, skewed linearly towards lower numbers.
+     * This means that the most-preferred groups are tried more often. It speeds up search quite a bit!
+     * For example, for NP == 5 then
+     * 0 : 0..4 (5)
+     * 1 : 5..8  (4)
+     * 2 : 9..11 (3)
+     * 3 : 12,14 (2)
+     * 4 : 4 (1)
+     * @return random number
+     */
+    public int getRandomPreferenceIndex(){
+        return PREF_TABLE[random.nextInt(PREF_TABLE.length)];
     }
 
     /**
@@ -183,10 +216,10 @@ public class Preferences implements Runnable{
     public Allocation getRandomAllocation(){
         int[] allocation = new int[getNumStudents()];
         for (int i = 0; i < preferences.length; i++){
-            int c = (int)(random.nextInt(NUM_PREFERENCES));
-            allocation[i] = preferences[i][c];
+//            int c = random.nextInt(NUM_PREFERENCES);
+            allocation[i] = preferences[i][getRandomPreferenceIndex()];
         }
-        return new Allocation(allocation,numGroups);
+        return new Allocation(allocation, NUM_GROUPS);
     }
 
     /**
