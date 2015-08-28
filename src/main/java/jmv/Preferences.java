@@ -103,6 +103,9 @@ public class Preferences implements Runnable{
         setPrefTable();
     }
 
+    private static final int EMAIL_COL = 11;
+    private static final int FIRSTCHOICE_COL = 14;
+
     public Preferences() throws IOException {
         CSVReader reader = new CSVReader(new FileReader("project_preferences.csv"));
         List myEntries = reader.readAll();
@@ -113,9 +116,9 @@ public class Preferences implements Runnable{
         int i = 0;
         while (iterator.hasNext()){
             String [] row = (String[]) iterator.next();
-            emails[i] = row[10];
+            emails[i] = row[EMAIL_COL];
             for (int j = 0; j < NUM_PREFERENCES; j++) {
-                preferences[i][j] = Integer.parseInt(row[11 + j]);
+                preferences[i][j] = Integer.parseInt(row[FIRSTCHOICE_COL + j]);
             }
             i++;
         }
@@ -290,7 +293,8 @@ public class Preferences implements Runnable{
     public Allocation mutateAllocation(Allocation allocation, int numChanges){
         for (int i = 0; i < random.nextInt(numChanges); i++) {
             int index = random.nextInt(allocation.NUM_STUDENTS); //of course, we could end up picking the same one multiple times
-            allocation.set(index, preferences[index][random.nextInt(NUM_PREFERENCES)]);
+//            allocation.set(index, preferences[index][random.nextInt(NUM_PREFERENCES)]);
+            allocation.set(index, preferences[index][getRandomPreferenceIndex()]);
         }
         return allocation;
     }
