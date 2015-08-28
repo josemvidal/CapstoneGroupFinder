@@ -2,8 +2,7 @@ package jmv;
 
 import au.com.bytecode.opencsv.CSVReader;
 
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -334,23 +333,31 @@ public class Preferences implements Runnable{
      * Perform a the search
      * @return the best allocation found.
      */
-    public Allocation hillClimbingSearch(){
+    public Allocation hillClimbingSearch() {
         Allocation bestAllocation = getRandomAllocation();
         int bestValue = getValue(bestAllocation);
         System.out.println(bestValue);
         Allocation next = bestAllocation;
         int nextValue;
-        for (int i = 0; i < 1000; i++) {
-//            next = continuousHillClimb(next);
-            next = continuousHillClimbWithNoise(next);
-            nextValue = getValue(next);
-            if  (nextValue < bestValue) {
-                bestValue = nextValue;
-                bestAllocation = next.clone();
-                System.out.println(bestValue - getNumStudents());
-                System.out.println(bestAllocation);
+        try {
+            long threadId = Thread.currentThread().getId();
+            PrintWriter writer = new PrintWriter("out-" + threadId);
+            while (true) { //infinite loop, user must kill this program
+                //            next = continuousHillClimb(next);
+                next = continuousHillClimbWithNoise(next);
+                nextValue = getValue(next);
+                if (nextValue < bestValue) {
+                    bestValue = nextValue;
+                    bestAllocation = next.clone();
+                    writer.println(bestValue - getNumStudents());
+                    writer.println(bestAllocation);
+                    writer.flush();
+                }
+                next = getRandomAllocation();
             }
-            next = getRandomAllocation();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
         return bestAllocation;
     }
