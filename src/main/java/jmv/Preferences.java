@@ -3,10 +3,7 @@ package jmv;
 import au.com.bytecode.opencsv.CSVReader;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * The set of everyone's preferences for which group they want to be in.
@@ -53,7 +50,7 @@ public class Preferences implements Runnable{
      * preferences[i] = [1,5,3,2] means student 1 prefers group 1, then group 5, then 3, then 2.
      */
     private final int[][] preferences;
-    private final String[] emails;
+    private final HashSet<String> emails;
     public static final Random random = new Random();
 
     /**
@@ -88,7 +85,7 @@ public class Preferences implements Runnable{
     public int getPreference(int student, int group){
         return preferencesIndex[student][group];
     }
-
+/*
     public Preferences(int[][] preferences){
         this.preferences = preferences;
         for (int[] p : preferences) {
@@ -101,21 +98,28 @@ public class Preferences implements Runnable{
         setPreferencesIndex();
         setPrefTable();
     }
-
+*/
     private static final int EMAIL_COL = 11;
     private static final int FIRSTCHOICE_COL = 14;
 
+    /**
+     * Creates a new Preferences object by reading in a csv file.
+     * @throws IOException
+     */
     public Preferences() throws IOException {
         CSVReader reader = new CSVReader(new FileReader("project_preferences.csv"));
         List myEntries = reader.readAll();
         int numStudents = myEntries.size();
         preferences = new int[numStudents][NUM_PREFERENCES];
-        emails = new String[numStudents];
+        emails = new HashSet<>();
         Iterator iterator = myEntries.iterator();
         int i = 0;
         while (iterator.hasNext()){
             String [] row = (String[]) iterator.next();
-            emails[i] = row[EMAIL_COL];
+            if (emails.contains(row[EMAIL_COL])) {
+                System.out.println("ERROR: Duplicate email" + row[EMAIL_COL]);
+            }
+            emails.add(row[EMAIL_COL]);
             for (int j = 0; j < NUM_PREFERENCES; j++) {
                 preferences[i][j] = Integer.parseInt(row[FIRSTCHOICE_COL + j]);
             }
