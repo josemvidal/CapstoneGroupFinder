@@ -15,6 +15,7 @@ public class Preferences implements Runnable{
      * Number of preferences each person submits
      */
     public static final int NUM_PREFERENCES = 5;
+    public static final int NUM_THREADS = 8;
 
     public static void main(String[] args) throws IOException {
 
@@ -38,7 +39,7 @@ public class Preferences implements Runnable{
 
         //Use hill-climbing with noise
         System.out.println("Starting threads");
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < NUM_THREADS; i++) {
             Preferences p = new Preferences();
             Thread t = new Thread(p);
             t.start();
