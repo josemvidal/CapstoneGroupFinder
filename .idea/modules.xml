@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/CapstoneGroupFinder.iml" filepath="$PROJECT_DIR$/CapstoneGroupFinder.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/CapstoneGroupFinder_main.iml" filepath="$PROJECT_DIR$/.idea/modules/CapstoneGroupFinder_main.iml" group="CapstoneGroupFinder" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/CapstoneGroupFinder_test.iml" filepath="$PROJECT_DIR$/.idea/modules/CapstoneGroupFinder_test.iml" group="CapstoneGroupFinder" />
     </modules>
   </component>
 </project>
