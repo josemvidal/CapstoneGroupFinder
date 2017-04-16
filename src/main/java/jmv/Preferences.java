@@ -132,6 +132,19 @@ public class Preferences implements Runnable{
         setPrefTable();
     }
 
+    /**
+     * Set preferences from a 2D array. Used for unit tests.
+     * @param preferences
+     */
+    public Preferences (int [][] preferences){
+        this.preferences = preferences;
+        emails = new HashSet<>();
+        NUM_GROUPS = calculateNumGroups();
+        preferencesIndex = new int[getNumStudents()][NUM_GROUPS];
+        setPreferencesIndex();
+        setPrefTable();
+    }
+
     public int getNumStudents(){
         return preferences.length;
     }

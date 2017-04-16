@@ -1,6 +1,9 @@
 import jmv.Allocation;
 import jmv.Preferences;
 import org.junit.Test;
+
+import java.io.IOException;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -30,7 +33,8 @@ public class TestPreferences {
                 {2,1,3,4,5},
                 {3,1,2,4,5},
                 {4,1,3,2,5}};
-        Preferences p = new Preferences(prefs);
+        Preferences p = null;
+        p = new Preferences(prefs);
         Allocation bestAlloc = p.getPreferredAllocation();
         for (int i = 0; i < bestAlloc.NUM_STUDENTS; i++) {
             assertEquals(i+1, bestAlloc.getGroup(i));
